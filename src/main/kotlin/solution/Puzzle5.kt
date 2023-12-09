@@ -3,7 +3,7 @@ package solution
 import core.Puzzle
 import core.parseLongList
 
-typealias AlmanacMap = List<Pair<LongRange, LongRange>>
+typealias TransmogrificationMap = List<Pair<LongRange, LongRange>>
 
 class Puzzle5(inputData: List<String>) : Puzzle(inputData) {
 
@@ -12,53 +12,17 @@ class Puzzle5(inputData: List<String>) : Puzzle(inputData) {
             first().parseLongList() to drop(2).joinToString(SINGLE_BREAK_LINE).split(DOUBLE_BREAK_LINE)
         }
 
-        var seedToSoilMap: AlmanacMap = emptyList()
-        var soilToFertilizerMap: AlmanacMap = emptyList()
-        var fertilizerToWaterMap: AlmanacMap = emptyList()
-        var waterToLightMap: AlmanacMap = emptyList()
-        var lightToTemperatureMap: AlmanacMap = emptyList()
-        var temperatureToHumidityMap: AlmanacMap = emptyList()
-        var humidityToLocationMap: AlmanacMap = emptyList()
-
-        maps.forEach { mapData ->
-            val (name, data) = with(mapData.split(SINGLE_BREAK_LINE)) {
-                first() to drop(1)
-            }
-            with(name) {
-                when {
-                    contains(SEED_TO_SOIL) ->
-                        seedToSoilMap = createSourceToDestinationMap(data)
-
-                    contains(SOIL_TO_FERTILIZER) ->
-                        soilToFertilizerMap = createSourceToDestinationMap(data)
-
-                    contains(FERTILIZER_TO_WATER) ->
-                        fertilizerToWaterMap = createSourceToDestinationMap(data)
-
-                    contains(WATER_TO_LIGHT) ->
-                        waterToLightMap = createSourceToDestinationMap(data)
-
-                    contains(LIGHT_TO_TEMPERATURE) ->
-                        lightToTemperatureMap = createSourceToDestinationMap(data)
-
-                    contains(TEMPERATURE_TO_HUMIDITY) ->
-                        temperatureToHumidityMap = createSourceToDestinationMap(data)
-
-                    contains(HUMIDITY_TO_LOCATION) ->
-                        humidityToLocationMap = createSourceToDestinationMap(data)
-                }
-            }
-        }
+        val almanac = Almanac(maps)
 
         return seeds.map { seed ->
-            val soil = seedToSoilMap.getDestinationBySource(seed)
-            val fertilizer = soilToFertilizerMap.getDestinationBySource(soil)
-            val water = fertilizerToWaterMap.getDestinationBySource(fertilizer)
-            val light = waterToLightMap.getDestinationBySource(water)
-            val temperature = lightToTemperatureMap.getDestinationBySource(light)
-            val humidity = temperatureToHumidityMap.getDestinationBySource(temperature)
+            val soil = almanac.seedToSoilMap.getDestinationBySource(seed)
+            val fertilizer = almanac.soilToFertilizerMap.getDestinationBySource(soil)
+            val water = almanac.fertilizerToWaterMap.getDestinationBySource(fertilizer)
+            val light = almanac.waterToLightMap.getDestinationBySource(water)
+            val temperature = almanac.lightToTemperatureMap.getDestinationBySource(light)
+            val humidity = almanac.temperatureToHumidityMap.getDestinationBySource(temperature)
 
-            return@map humidityToLocationMap.getDestinationBySource(humidity)
+            return@map almanac.humidityToLocationMap.getDestinationBySource(humidity)
         }.min()
     }
 
@@ -69,55 +33,19 @@ class Puzzle5(inputData: List<String>) : Puzzle(inputData) {
             }.sortedBy { it.first } to drop(2).joinToString(SINGLE_BREAK_LINE).split(DOUBLE_BREAK_LINE)
         }
 
-        var seedToSoilMap: AlmanacMap = emptyList()
-        var soilToFertilizerMap: AlmanacMap = emptyList()
-        var fertilizerToWaterMap: AlmanacMap = emptyList()
-        var waterToLightMap: AlmanacMap = emptyList()
-        var lightToTemperatureMap: AlmanacMap = emptyList()
-        var temperatureToHumidityMap: AlmanacMap = emptyList()
-        var humidityToLocationMap: AlmanacMap = emptyList()
+        val almanac = Almanac(maps)
 
-        maps.forEach { mapData ->
-            val (name, data) = with(mapData.split(SINGLE_BREAK_LINE)) {
-                first() to drop(1)
-            }
-            with(name) {
-                when {
-                    contains(SEED_TO_SOIL) ->
-                        seedToSoilMap = createSourceToDestinationMap(data)
+        val soils = almanac.seedToSoilMap.getRangesOccurrences(seeds)
+        val fertilizer = almanac.soilToFertilizerMap.getRangesOccurrences(soils)
+        val water = almanac.fertilizerToWaterMap.getRangesOccurrences(fertilizer)
+        val light = almanac.waterToLightMap.getRangesOccurrences(water)
+        val temperature = almanac.lightToTemperatureMap.getRangesOccurrences(light)
+        val humidity = almanac.temperatureToHumidityMap.getRangesOccurrences(temperature)
 
-                    contains(SOIL_TO_FERTILIZER) ->
-                        soilToFertilizerMap = createSourceToDestinationMap(data)
-
-                    contains(FERTILIZER_TO_WATER) ->
-                        fertilizerToWaterMap = createSourceToDestinationMap(data)
-
-                    contains(WATER_TO_LIGHT) ->
-                        waterToLightMap = createSourceToDestinationMap(data)
-
-                    contains(LIGHT_TO_TEMPERATURE) ->
-                        lightToTemperatureMap = createSourceToDestinationMap(data)
-
-                    contains(TEMPERATURE_TO_HUMIDITY) ->
-                        temperatureToHumidityMap = createSourceToDestinationMap(data)
-
-                    contains(HUMIDITY_TO_LOCATION) ->
-                        humidityToLocationMap = createSourceToDestinationMap(data)
-                }
-            }
-        }
-
-        val soils = seedToSoilMap.getRangesOccurrences(seeds)
-        val fertilizer = soilToFertilizerMap.getRangesOccurrences(soils)
-        val water = fertilizerToWaterMap.getRangesOccurrences(fertilizer)
-        val light = waterToLightMap.getRangesOccurrences(water)
-        val temperature = lightToTemperatureMap.getRangesOccurrences(light)
-        val humidity = temperatureToHumidityMap.getRangesOccurrences(temperature)
-
-        return humidityToLocationMap.getRangesOccurrences(humidity).minBy(LongRange::first).first
+        return almanac.humidityToLocationMap.getRangesOccurrences(humidity).minBy(LongRange::first).first
     }
 
-    private fun AlmanacMap.getDestinationBySource(value: Long): Long {
+    private fun TransmogrificationMap.getDestinationBySource(value: Long): Long {
         val (sourceRange, destinationRange) = find { it.first.contains(value) } ?: return value
 
         val range = value - sourceRange.first
@@ -125,7 +53,7 @@ class Puzzle5(inputData: List<String>) : Puzzle(inputData) {
         return destinationRange.first + range
     }
 
-    private fun AlmanacMap.getRangesOccurrences(sourceRanges: List<LongRange>): List<LongRange> {
+    private fun TransmogrificationMap.getRangesOccurrences(sourceRanges: List<LongRange>): List<LongRange> {
         return rangesOccurrencesList(sourceRanges, this)
     }
 
@@ -167,13 +95,76 @@ class Puzzle5(inputData: List<String>) : Puzzle(inputData) {
 
     private fun createSourceToDestinationMap(
         inputData: List<String>
-    ): AlmanacMap {
+    ): TransmogrificationMap {
         return inputData.map { data ->
             val (destinationStart, sourceStart, range) = with(data.parseLongList()) {
                 Triple(first(), drop(1).first(), last())
             }
 
             sourceStart..<sourceStart + range to destinationStart..<destinationStart + range
+        }
+    }
+
+    private class Almanac(
+        transmogrificationMap: List<String>
+    ) {
+        var seedToSoilMap: TransmogrificationMap = emptyList()
+            private set
+        var soilToFertilizerMap: TransmogrificationMap = emptyList()
+            private set
+        var fertilizerToWaterMap: TransmogrificationMap = emptyList()
+            private set
+        var waterToLightMap: TransmogrificationMap = emptyList()
+            private set
+        var lightToTemperatureMap: TransmogrificationMap = emptyList()
+            private set
+        var temperatureToHumidityMap: TransmogrificationMap = emptyList()
+            private set
+        var humidityToLocationMap: TransmogrificationMap = emptyList()
+            private set
+
+        init {
+            transmogrificationMap.forEach { mapData ->
+                val (name, data) = with(mapData.split(SINGLE_BREAK_LINE)) {
+                    first() to drop(1)
+                }
+                with(name) {
+                    when {
+                        contains(SEED_TO_SOIL) ->
+                            seedToSoilMap = createSourceToDestinationMap(data)
+
+                        contains(SOIL_TO_FERTILIZER) ->
+                            soilToFertilizerMap = createSourceToDestinationMap(data)
+
+                        contains(FERTILIZER_TO_WATER) ->
+                            fertilizerToWaterMap = createSourceToDestinationMap(data)
+
+                        contains(WATER_TO_LIGHT) ->
+                            waterToLightMap = createSourceToDestinationMap(data)
+
+                        contains(LIGHT_TO_TEMPERATURE) ->
+                            lightToTemperatureMap = createSourceToDestinationMap(data)
+
+                        contains(TEMPERATURE_TO_HUMIDITY) ->
+                            temperatureToHumidityMap = createSourceToDestinationMap(data)
+
+                        contains(HUMIDITY_TO_LOCATION) ->
+                            humidityToLocationMap = createSourceToDestinationMap(data)
+                    }
+                }
+            }
+        }
+
+        private fun createSourceToDestinationMap(
+            inputData: List<String>
+        ): TransmogrificationMap {
+            return inputData.map { data ->
+                val (destinationStart, sourceStart, range) = with(data.parseLongList()) {
+                    Triple(first(), drop(1).first(), last())
+                }
+
+                sourceStart..<sourceStart + range to destinationStart..<destinationStart + range
+            }
         }
     }
 

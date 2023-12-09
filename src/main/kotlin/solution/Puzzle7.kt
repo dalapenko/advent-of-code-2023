@@ -3,12 +3,15 @@ package solution
 import core.Puzzle
 import core.toOccurrencesMap
 
+typealias CardInHand = MutableList<Pair<String, Long>>
+typealias WeightMap = Map<Char, Int>
+
 class Puzzle7(inputData: List<String>) : Puzzle(inputData) {
 
     override fun firstPuzzleSolution(inputData: List<String>): Any {
         val gameData = inputData.map { with(it.split(SPACE)) { first() to last().toLong() } }
 
-        val handMap = sortedMapOf<HandType, MutableList<Pair<String, Long>>>(HandType.comparator)
+        val handMap = sortedMapOf<HandType, CardInHand>(HandType.comparator)
 
         gameData.forEach { (hand, bid) ->
             val handType = HandType.getHandType(hand)
@@ -21,11 +24,8 @@ class Puzzle7(inputData: List<String>) : Puzzle(inputData) {
             'A' to 14, 'K' to 13, 'Q' to 12, 'J' to 11, 'T' to 10, '9' to 9,
             '8' to 8, '7' to 7, '6' to 6, '5' to 5, '4' to 4, '3' to 3, '2' to 2
         )
-        val sortedHands = handMap.values.map { handInType ->
-            if (handInType.size == 1) return@map handInType
 
-            return@map handInType.sortedWith(HandComparator(cardWeightMap))
-        }.flatten()
+        val sortedHands = handMap.values.sortByWeight(cardWeightMap)
 
         return sortedHands.map { it.second }.reduceIndexed { index, acc, bid ->
             return@reduceIndexed acc + bid * (index + 1)
@@ -35,7 +35,7 @@ class Puzzle7(inputData: List<String>) : Puzzle(inputData) {
     override fun secondPuzzleSolution(inputData: List<String>): Any {
         val gameData = inputData.map { with(it.split(SPACE)) { first() to last().toLong() } }
 
-        val handMap = sortedMapOf<HandType, MutableList<Pair<String, Long>>>(HandType.comparator)
+        val handMap = sortedMapOf<HandType, CardInHand>(HandType.comparator)
 
         gameData.forEach { (hand, bid) ->
             val handType = HandType.getHandType(hand, withJokerRule = true)
@@ -49,19 +49,23 @@ class Puzzle7(inputData: List<String>) : Puzzle(inputData) {
             '7' to 7, '6' to 6, '5' to 5, '4' to 4, '3' to 3, '2' to 2, 'J' to 1
         )
 
-        val sortedHands = handMap.values.map { handInType ->
-            if (handInType.size == 1) return@map handInType
-
-            return@map handInType.sortedWith(HandComparator(cardWeightMap))
-        }.flatten()
+        val sortedHands = handMap.values.sortByWeight(cardWeightMap)
 
         return sortedHands.map { it.second }.reduceIndexed { index, acc, bid ->
             return@reduceIndexed acc + bid * (index + 1)
         }
     }
 
+    private fun Collection<CardInHand>.sortByWeight(weightMap: WeightMap): List<Pair<String, Long>> {
+        return map { handInType ->
+            if (handInType.size == 1) return@map handInType
+
+            return@map handInType.sortedWith(HandComparator(weightMap))
+        }.flatten()
+    }
+
     private class HandComparator(
-        private val weightMap: Map<Char, Int>
+        private val weightMap: WeightMap
     ) : Comparator<Pair<String, Long>> {
         override fun compare(o1: Pair<String, Long>, o2: Pair<String, Long>): Int {
             if (o1.first == o2.first) return 0

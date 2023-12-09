@@ -8,32 +8,18 @@ typealias StepMap = Map<String, Pair<String, String>>
 
 class Puzzle8(inputData: List<String>) : Puzzle(inputData) {
 
-    private val stringRegex = "\\w+".toRegex()
-    private val charRegex = "\\w".toRegex()
-
     override fun firstPuzzleSolution(inputData: List<String>): Any {
-        val (flow, map) = charRegex.findAllValue(inputData.first()).toList() to inputData.drop(2)
-        val startFrom = "AAA"
-        val endAt = "ZZZ"
+        val (flow, map) = readInputData(inputData)
+        val stepMap = createStepMap(map)
 
-        val stepMap = map.associate { line ->
-            with(stringRegex.findAll(line).map(MatchResult::value)) {
-                first() to with(drop(1)) { first() to last() }
-            }
-        }
-
-        return stepMap.countByFlow(flow, startFrom) {
-            it == endAt
+        return stepMap.countByFlow(stepFlow = flow, from = "AAA") { stepValue ->
+            stepValue == "ZZZ"
         }
     }
 
     override fun secondPuzzleSolution(inputData: List<String>): Any {
-        val (flow, map) = charRegex.findAllValue(inputData.first()).toList() to inputData.drop(2)
-        val stepMap = map.associate { line ->
-            with(stringRegex.findAll(line).map(MatchResult::value)) {
-                first() to with(drop(1)) { first() to last() }
-            }
-        }
+        val (flow, map) = readInputData(inputData)
+        val stepMap = createStepMap(map)
         val startedPoints = stepMap.keys.filter { it.endsWith("A") }
 
         return startedPoints.map { start ->
@@ -41,6 +27,18 @@ class Puzzle8(inputData: List<String>) : Puzzle(inputData) {
                 it.endsWith("Z")
             }
         }.lcm()
+    }
+
+    private fun readInputData(inputData: List<String>): Pair<List<String>, List<String>> {
+        return "\\w".toRegex().findAllValue(inputData.first()).toList() to inputData.drop(2)
+    }
+
+    private fun createStepMap(map: List<String>): StepMap {
+        return map.associate { line ->
+            with("\\w+".toRegex().findAll(line).map(MatchResult::value)) {
+                first() to with(drop(1)) { first() to last() }
+            }
+        }
     }
 
     private fun StepMap.countByFlow(
