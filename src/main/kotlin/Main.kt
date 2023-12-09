@@ -1,10 +1,9 @@
-import solution.Puzzle7
+import solution.Puzzle8
 
 fun main() {
-    val puzzle = Puzzle7(readFromRes(Puzzle7.INPUT_FILE_NAME))
-    puzzle.printSecondPuzzleAnswer()
+    val puzzle = Puzzle8(readFromRes(Puzzle8.INPUT_FILE_NAME))
+    puzzle.printFirstPuzzleAnswer()
 }
-
 
 fun readFromRes(fileName: String): List<String> {
     val data = {}.javaClass.getResource(fileName)

@@ -43,3 +43,28 @@ fun String.toOccurrencesMap(): Map<Char, Int> {
     }
     return resultMap
 }
+
+fun Regex.findAllValue(input: CharSequence, startIndex: Int = 0): Sequence<String> {
+    return findAll(input, startIndex).map(MatchResult::value)
+}
+
+/**
+ * Наименьшее общее кратное
+ */
+fun lcm(a: Long, b: Long): Long {
+    return (a * b) / gcd(a, b)
+}
+
+/**
+ * Наибольший общий делитель
+ */
+fun gcd(a: Long, b: Long): Long {
+    var n1 = a
+    var n2 = b
+
+    while (n2 != 0L) {
+        n1 = n2.also { n2 = n1 % n2 }
+    }
+
+    return n1
+}
