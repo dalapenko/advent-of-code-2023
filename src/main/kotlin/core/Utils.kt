@@ -9,7 +9,7 @@ fun String.replaceAll(replaceMap: Map<String, String>): String {
 }
 
 fun String.parseIntList(): List<Int> {
-    val numberRegex = "\\d+".toRegex()
+    val numberRegex = "-?\\d+".toRegex()
     return numberRegex.findAll(this)
         .map { it.value.toInt() }
         .toList()
